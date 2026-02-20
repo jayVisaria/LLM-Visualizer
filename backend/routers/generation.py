@@ -55,15 +55,18 @@ async def generate_stream(req: GenerateRequest):
         top_k = req.top_k if req.strategy in ("top_k", "temperature") else None
         top_p = req.top_p if req.strategy == "nucleus" else None
 
-        # Generate tokens
-        with torch.no_grad():
-            steps = model.generate(
-                input_ids,
-                max_new_tokens=req.max_tokens,
-                temperature=max(temperature, 1e-8),
-                top_k=top_k,
-                top_p=top_p,
-            )
+        # Generate tokens — run in thread pool to avoid blocking the event loop
+        def _run_generate():
+            with torch.no_grad():
+                return model.generate(
+                    input_ids,
+                    max_new_tokens=req.max_tokens,
+                    temperature=max(temperature, 1e-8),
+                    top_k=top_k,
+                    top_p=top_p,
+                )
+
+        steps = await asyncio.to_thread(_run_generate)
 
         # Stream each token
         generated_ids = list(ids)
@@ -103,7 +106,7 @@ async def generate_stream(req: GenerateRequest):
 
 
 @router.post("/generate-sync")
-def generate_sync(req: GenerateRequest):
+async def generate_sync(req: GenerateRequest):
     """Generate text synchronously — returns full result at once."""
     if _model is None or _tokenizer is None:
         raise HTTPException(503, "Model not initialized")
@@ -119,14 +122,18 @@ def generate_sync(req: GenerateRequest):
     top_k = req.top_k if req.strategy in ("top_k", "temperature") else None
     top_p = req.top_p if req.strategy == "nucleus" else None
 
-    with torch.no_grad():
-        steps = model.generate(
-            input_ids,
-            max_new_tokens=req.max_tokens,
-            temperature=max(temperature, 1e-8),
-            top_k=top_k,
-            top_p=top_p,
-        )
+    # Run in thread pool to avoid blocking the event loop
+    def _run_generate():
+        with torch.no_grad():
+            return model.generate(
+                input_ids,
+                max_new_tokens=req.max_tokens,
+                temperature=max(temperature, 1e-8),
+                top_k=top_k,
+                top_p=top_p,
+            )
+
+    steps = await asyncio.to_thread(_run_generate)
 
     generated_ids = list(ids)
     token_details = []

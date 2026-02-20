@@ -100,10 +100,20 @@ export function streamGenerate(
     signal: ctrl.signal,
   })
     .then(async (response) => {
+      if (!response.ok) {
+        const errText = await response.text().catch(() => `HTTP ${response.status}`);
+        onError?.(new Error(errText));
+        return;
+      }
+
       const reader = response.body?.getReader();
-      if (!reader) return;
+      if (!reader) {
+        onError?.(new Error('No response body'));
+        return;
+      }
       const decoder = new TextDecoder();
       let buffer = '';
+      let doneReceived = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -118,11 +128,14 @@ export function streamGenerate(
             try {
               const data = JSON.parse(line.slice(6));
               if (data.type === 'token') onToken(data);
-              else if (data.type === 'done') onDone(data);
+              else if (data.type === 'done') { doneReceived = true; onDone(data); }
             } catch { /* skip */ }
           }
         }
       }
+
+      // Stream closed without a done event (e.g. server crash mid-stream)
+      if (!doneReceived) onDone({ type: 'done' });
     })
     .catch((err) => {
       if (err.name !== 'AbortError') onError?.(err);

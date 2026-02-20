@@ -67,6 +67,9 @@ export default function GenerationPage() {
   const generateAll = async () => {
     setIsGenerating(true);
     setPhase('generating');
+    setGeneratedText(prompt);
+    setTokenProbs([]);
+    setCurrentProbs(null);
     try {
       const data = await generateSync({
         prompt,
@@ -77,11 +80,16 @@ export default function GenerationPage() {
         strategy,
       });
       setGeneratedText(data.generated_text || '');
+      if (data.tokens?.length) {
+        setTokenProbs(data.tokens);
+        setCurrentProbs(data.tokens[data.tokens.length - 1]);
+      }
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsGenerating(false);
+      setPhase('idle');
     }
-    setIsGenerating(false);
-    setPhase('idle');
   };
 
   return (
@@ -227,7 +235,7 @@ export default function GenerationPage() {
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '16px', alignItems: 'center' }}>
           {isGenerating ? (
             <button className="danger" onClick={stopGenerate}>
               Stop

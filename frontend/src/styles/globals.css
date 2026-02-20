@@ -324,7 +324,7 @@ body {
 /* ─── Interactive Controls ─── */
 .controls {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: flex-end;
   flex-wrap: wrap;
   margin-bottom: 20px;
@@ -334,6 +334,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 120px;
 }
 
 .control-group label {

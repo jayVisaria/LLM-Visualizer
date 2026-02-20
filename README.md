@@ -34,7 +34,7 @@ Open [http://localhost:5173](http://localhost:5173).
 ## Structure
 
 ```
-llm-scratch/
+LLM-Visualizer/
 ├── backend/
 │   ├── core/          # model, tokenizer, trainer, attention
 │   └── routers/       # API endpoints per topic

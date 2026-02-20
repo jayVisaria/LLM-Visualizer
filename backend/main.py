@@ -15,7 +15,6 @@ import sys
 # Ensure the backend package is importable
 sys.path.insert(0, os.path.dirname(__file__))
 
-import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,15 +39,6 @@ CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), "checkpoints")
 # ---------------------------------------------------------------------------
 # Startup / shutdown
 # ---------------------------------------------------------------------------
-def _heavy_init() -> None:
-    """Run in a thread — loads tokenizer, model, trainer into app_state."""
-    try:
-        _do_init()
-    except Exception as e:
-        print(f"\n*** INIT FAILED: {e} ***\n")
-        app_state["init_error"] = str(e)
-
-
 def _do_init() -> None:
     print("=" * 60)
     print("  LLM Visualizer — Initializing (background)...")
@@ -128,12 +118,14 @@ def _do_init() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Bind port immediately, then init model in background thread."""
-    # Run heavy init in a thread so uvicorn binds the port right away
-    loop = asyncio.get_running_loop()
-    loop.run_in_executor(None, _heavy_init)
+    """Initialize tokenizer, model, and trainer on startup."""
+    try:
+        _do_init()
+    except Exception as e:
+        print(f"\n*** INIT FAILED: {e} ***\n")
+        app_state["init_error"] = str(e)
 
-    yield  # App is serving (model may still be loading)
+    yield
 
     print("\nShutting down...")
 

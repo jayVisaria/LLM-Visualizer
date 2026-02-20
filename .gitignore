@@ -19,9 +19,10 @@ node_modules/
 frontend/dist/
 frontend/.env
 
-# Env
+# Env (secrets only — .env.production is safe to commit)
 .env
-.env.*
+.env.local
+.env.*.local
 
 # macOS
 .DS_Store

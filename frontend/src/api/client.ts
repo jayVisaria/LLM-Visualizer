@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const BASE = import.meta.env.VITE_API_URL ?? '';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${BASE}/api`,
   timeout: 120000,
 });
 
@@ -91,7 +93,7 @@ export function streamGenerate(
   const body = JSON.stringify(params);
   const ctrl = new AbortController();
 
-  fetch('/api/generate', {
+  fetch(`${BASE}/api/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body,
@@ -140,7 +142,7 @@ export function streamTraining(
   const body = JSON.stringify(params);
   const ctrl = new AbortController();
 
-  fetch('/api/train', {
+  fetch(`${BASE}/api/train`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body,

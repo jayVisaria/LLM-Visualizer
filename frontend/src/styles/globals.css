@@ -1,5 +1,6 @@
-/* ─── Global Styles — Dark Theme ─── */
+/* ─── Global Styles — Dark Theme (default) ─── */
 :root {
+  color-scheme: dark;
   --bg-primary: #0d1117;
   --bg-secondary: #161b22;
   --bg-tertiary: #21262d;
@@ -23,6 +24,29 @@
   --radius-lg: 12px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* ─── Light Theme ─── */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f6f8fa;
+  --bg-tertiary: #eaeef2;
+  --bg-card: #f6f8fa;
+  --border: #d0d7de;
+  --text-primary: #1f2328;
+  --text-secondary: #656d76;
+  --text-muted: #9198a1;
+  --accent: #0969da;
+  --accent-hover: #0860ca;
+  --accent-bg: rgba(9, 105, 218, 0.08);
+  --green: #1a7f37;
+  --yellow: #9a6700;
+  --red: #cf222e;
+  --purple: #8250df;
+  --orange: #bc4c00;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 * {
@@ -452,7 +476,7 @@ button.danger {
   justify-content: space-between;
   align-items: center;
   padding: 10px 16px;
-  background: linear-gradient(to bottom, #1c2128, #161b22);
+  background: linear-gradient(to bottom, var(--bg-card), var(--bg-secondary));
   border-bottom: 1px solid var(--border);
   gap: 12px;
   user-select: none;
@@ -1680,7 +1704,7 @@ button.danger {
   right: 0;
   transform: translateY(100%);
   z-index: 100;
-  background: #1c2128;
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 8px 12px;

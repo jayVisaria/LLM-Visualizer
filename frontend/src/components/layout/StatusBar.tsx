@@ -5,8 +5,8 @@ import { getConfig, getStatus } from '../../api/client';
 export default function StatusBar() {
   const {
     modelConfig, datasetName, phase, currentStep, currentLoss,
-    modelParams, lastError,
-    loadServerConfig, setTrainingProgress, setPhase, setError, setModelReady,
+    modelParams, lastError, theme,
+    loadServerConfig, setTrainingProgress, setPhase, setError, setModelReady, toggleTheme,
   } = useAppStore();
 
   const pollRef = useRef<number | null>(null);
@@ -106,6 +106,24 @@ export default function StatusBar() {
             ⚠ {lastError}
           </span>
         )}
+        <button
+          onClick={toggleTheme}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          style={{
+            background: 'none',
+            border: '1px solid var(--border)',
+            borderRadius: '6px',
+            color: 'var(--text-secondary)',
+            padding: '2px 7px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            lineHeight: '1.6',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
       </div>
     </div>
   );

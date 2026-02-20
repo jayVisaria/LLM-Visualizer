@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import StatusBar from './components/layout/StatusBar';
 import ConfigPanel from './components/layout/ConfigPanel';
 import ErrorBoundary from './components/shared/ErrorBoundary';
+import { useAppStore } from './store/useAppStore';
 
 import TokenizationPage from './pages/01_Tokenization';
 import EmbeddingsPage from './pages/02_Embeddings';
@@ -18,6 +20,13 @@ import DashboardPage from './pages/00_Dashboard';
 import ModernArchitecturesPage from './pages/11_ModernArchitectures';
 
 export default function App() {
+  const theme = useAppStore((s) => s.theme);
+
+  // Sync data-theme attribute on mount and whenever theme changes
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
   return (
     <HashRouter>
       <div className="app-layout">

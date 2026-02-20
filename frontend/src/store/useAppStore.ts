@@ -57,6 +57,7 @@ interface AppState {
 
   // UI state
   configPanelOpen: boolean;
+  theme: 'dark' | 'light';
   sharedText: string;       // text shared across pages for pipeline continuity
   lastError: string | null;
 
@@ -74,6 +75,7 @@ interface AppState {
   setModelReady: (ready: boolean) => void;
   toggleConfigPanel: () => void;
   setConfigPanelOpen: (open: boolean) => void;
+  toggleTheme: () => void;
   setSharedText: (text: string) => void;
   setError: (error: string | null) => void;
   setSnapshots: (snapshots: SnapshotInfo[]) => void;
@@ -110,6 +112,7 @@ export const useAppStore = create<AppState>((set) => ({
   isModelReady: false,
 
   configPanelOpen: false,
+  theme: (localStorage.getItem('llm-theme') as 'dark' | 'light') || 'dark',
   sharedText: 'To be, or not to be, that is the question',
   lastError: null,
 
@@ -132,6 +135,13 @@ export const useAppStore = create<AppState>((set) => ({
   toggleConfigPanel: () =>
     set((s) => ({ configPanelOpen: !s.configPanelOpen })),
   setConfigPanelOpen: (open) => set({ configPanelOpen: open }),
+  toggleTheme: () =>
+    set((s) => {
+      const next = s.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('llm-theme', next);
+      document.documentElement.setAttribute('data-theme', next);
+      return { theme: next };
+    }),
   setSharedText: (text) => set({ sharedText: text }),
   setError: (error) => set({ lastError: error }),
   setSnapshots: (snapshots) => set({ snapshots }),

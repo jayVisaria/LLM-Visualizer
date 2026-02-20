@@ -15,6 +15,7 @@ import sys
 # Ensure the backend package is importable
 sys.path.insert(0, os.path.dirname(__file__))
 
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,11 +40,18 @@ CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), "checkpoints")
 # ---------------------------------------------------------------------------
 # Startup / shutdown
 # ---------------------------------------------------------------------------
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Initialize tokenizer, model, and trainer on startup."""
+def _heavy_init() -> None:
+    """Run in a thread — loads tokenizer, model, trainer into app_state."""
+    try:
+        _do_init()
+    except Exception as e:
+        print(f"\n*** INIT FAILED: {e} ***\n")
+        app_state["init_error"] = str(e)
+
+
+def _do_init() -> None:
     print("=" * 60)
-    print("  LLM Visualizer — Starting up...")
+    print("  LLM Visualizer — Initializing (background)...")
     print("=" * 60)
 
     # 1. Load / train tokenizer
@@ -55,8 +63,9 @@ async def lifespan(app: FastAPI):
         print(f"  Loading saved tokenizer from {TOKENIZER_PATH}")
         tok.load(TOKENIZER_PATH)
     else:
-        print("  Training BPE tokenizer (500 merges)...")
-        tok.train(text, num_merges=500, verbose=True)
+        num_merges = int(os.environ.get("BPE_MERGES", "200"))
+        print(f"  Training BPE tokenizer ({num_merges} merges)...")
+        tok.train(text, num_merges=num_merges, verbose=False)
         tok.save(TOKENIZER_PATH)
         print(f"  Saved tokenizer to {TOKENIZER_PATH}")
 
@@ -73,18 +82,23 @@ async def lifespan(app: FastAPI):
 
     # Load checkpoint if available
     ckpt_path = os.path.join(CHECKPOINT_DIR, "model.pt")
+    ckpt = None
     if os.path.exists(ckpt_path):
-        import torch
-        ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
-        model.load_state_dict(ckpt["model_state_dict"])
-        print(f"  Loaded checkpoint from {ckpt_path}")
+        try:
+            import torch
+            ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+            model.load_state_dict(ckpt["model_state_dict"])
+            print(f"  Loaded checkpoint from {ckpt_path}")
+        except Exception as e:
+            print(f"  Warning: could not load checkpoint ({e}), using fresh model")
+            ckpt = None
 
     # 3. Initialize trainer
     print("\n[3/3] Initializing trainer...")
     train_config = TrainConfig(checkpoint_dir=CHECKPOINT_DIR)
     trainer = Trainer(model, tok, train_config)
 
-    if os.path.exists(ckpt_path):
+    if ckpt is not None:
         trainer.step = ckpt.get("step", 0)
         trainer.loss_history = ckpt.get("loss_history", [])
         print(f"  Resumed from step {trainer.step}")
@@ -104,14 +118,22 @@ async def lifespan(app: FastAPI):
     app_state["dataset_name"] = "tiny_shakespeare"
     app_state["checkpoint_dir"] = CHECKPOINT_DIR
 
-    # Wire config router with shared app state
     config_router.set_app_state(app_state)
+    app_state["ready"] = True
 
     print("\n" + "=" * 60)
     print("  Ready! API at http://localhost:8000/docs")
     print("=" * 60 + "\n")
 
-    yield  # App runs here
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Bind port immediately, then init model in background thread."""
+    # Run heavy init in a thread so uvicorn binds the port right away
+    loop = asyncio.get_running_loop()
+    loop.run_in_executor(None, _heavy_init)
+
+    yield  # App is serving (model may still be loading)
 
     print("\nShutting down...")
 
@@ -153,8 +175,11 @@ app.include_router(config_router.router)
 
 @app.get("/api/health")
 def health():
+    if "init_error" in app_state:
+        return {"status": "error", "error": app_state["init_error"]}
+    ready = app_state.get("ready", False)
     return {
-        "status": "ok",
+        "status": "ok" if ready else "initializing",
         "tokenizer_ready": "tokenizer" in app_state,
         "model_ready": "model" in app_state,
     }

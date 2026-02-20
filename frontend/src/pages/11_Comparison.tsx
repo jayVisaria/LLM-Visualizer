@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Plot from 'react-plotly.js';
 import PageLayout from '../components/layout/PageLayout';
-import { listSnapshots, getConfig } from '../api/client';
+import { listSnapshots } from '../api/client';
 import { useAppStore } from '../store/useAppStore';
 
 interface SnapshotMeta {

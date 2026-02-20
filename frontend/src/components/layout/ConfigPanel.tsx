@@ -30,7 +30,7 @@ function Slider({ label, value, min, max, step, onChange, unit, tooltip }: {
 // ─── Main Component ─────────────────────────────────────────────────────────
 export default function ConfigPanel() {
   const {
-    modelConfig, trainConfig, datasetName, phase, snapshots, configPanelOpen,
+    modelConfig, trainConfig, datasetName, snapshots, configPanelOpen,
     setModelConfig, setTrainConfig, setDatasetName, setPhase, setError,
     toggleConfigPanel, loadServerConfig, setSnapshots, setModelParams,
   } = useAppStore();

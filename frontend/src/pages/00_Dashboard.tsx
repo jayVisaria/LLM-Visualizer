@@ -42,12 +42,12 @@ const ROADMAP = [
 ];
 
 export default function DashboardPage() {
-  const { modelConfig, trainConfig, modelParams, datasetName, phase,
+  const { modelConfig, trainConfig, datasetName,
           currentStep, currentLoss, tokenizer, loadServerConfig, setModelReady } = useAppStore();
 
   const [lossHistory, setLossHistory] = useState<any[]>([]);
   const [vocabStats, setVocabStats] = useState<any>(null);
-  const [backendUp, setBackendUp] = useState<boolean | null>(null);
+  const [_backendUp, setBackendUp] = useState<boolean | null>(null);
   const pollRef = useRef<number | null>(null);
 
   useEffect(() => {

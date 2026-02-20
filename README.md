@@ -1,5 +1,7 @@
 # LLM Visualizer
 
+**[Live Demo →](https://jayvisaria.github.io/LLM-Visualizer/)**
+
 An interactive educational app for building a Transformer from scratch — tokenization through modern architectures, with live visualizations and a real PyTorch model running in the backend.
 
 ## Getting Started
@@ -42,7 +44,3 @@ llm-scratch/
         ├── components/
         └── store/
 ```
-
-## License
-
-MIT
